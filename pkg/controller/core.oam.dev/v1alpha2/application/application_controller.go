@@ -262,7 +262,25 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if !hasHealthCheckPolicy(appFile.PolicyWorkloads) {
 		app.Status.Services = handler.services
 		if !isHealthy(handler.services) {
-			phase = common.ApplicationUnhealthy
+			isHealthy := true
+			for _, svc := range handler.services {
+				for _, comp := range app.Spec.Components {
+					if svc.Name == comp.Name {
+						wl, _, err := handler.prepareWorkloadAndManifests(logCtx, appParser, app.Spec.Components[0], handler.currentAppRev, nil, appFile)
+						if err != nil {
+							logCtx.Error(err, "fail to prepare workdload")
+						}
+						wl.Ctx.SetCtx(auth.ContextWithUserInfo(ctx, handler.app))
+						_, isHealthy, err = handler.collectHealthStatus(logCtx, wl, handler.currentAppRev, app.Namespace, false)
+						if err != nil {
+							logCtx.Error(err, "error collectHealthStatus")
+						}
+					}
+				}
+			}
+			if !isHealthy {
+				phase = common.ApplicationUnhealthy
+			}
 		}
 	}
 
