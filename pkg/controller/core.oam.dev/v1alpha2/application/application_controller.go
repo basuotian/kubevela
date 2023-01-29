@@ -271,7 +271,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 							logCtx.Error(err, "fail to prepare workdload")
 						}
 						wl.Ctx.SetCtx(auth.ContextWithUserInfo(ctx, handler.app))
-						_, isHealthy, err = handler.collectHealthStatus(logCtx, wl, handler.currentAppRev, app.Namespace, false)
+						_, _, _, isHealthy, err = handler.collectHealthStatus(logCtx, wl, handler.currentAppRev, app.Namespace, false)
 						if err != nil {
 							logCtx.Error(err, "error collectHealthStatus")
 						}
